@@ -1,0 +1,238 @@
+
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halvim tunniplaan</title>
+<style>
+body {
+  background: repeating-linear-gradient(45deg, yellow, magenta 30px, cyan 60px);
+  font-family: "Comic Sans MS", cursive;
+  color: purple;
+  margin: 10px;
+}
+main {
+  background: #ccc;
+  border: 8px ridge white;
+  padding: 15px;
+  max-width: 800px;
+  margin: auto;
+}
+h1 {
+  color: magenta;
+  text-align: center;
+  text-shadow: 3px 3px cyan;
+}
+section {
+  background: #ffffa0;
+  border: 5px groove magenta;
+  padding: 12px;
+  margin: 20px 0;
+}
+button, select {
+  padding: 10px;
+  border: 4px outset white;
+  background: linear-gradient(90deg, yellow, magenta, cyan);
+  font-family: inherit;
+  cursor: pointer;
+  font-weight: bold;
+}
+select { width: 100%; }
+.small { font-size: 10px; }
+#lessons {
+  background: #ddd;
+  border: 3px dotted red;
+  padding: 10px;
+  min-height: 70px;
+  font-size: 11px;
+}
+.lesson {
+  background: white;
+  border-left: 8px solid magenta;
+  margin: 6px 0;
+  padding: 8px;
+}
+.pages { text-align: center; }
+#pageLabel { background: black; color: white; padding: 8px; }
+#dial {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: 10px ridge gray;
+  background: radial-gradient(circle, #eee 30%, #333 31%, #ddd 40%, #777 70%);
+  position: relative;
+  cursor: pointer;
+  margin: 15px auto;
+  transition: transform .3s;
+}
+#dial span {
+  position: absolute;
+  background: black;
+  color: white;
+  padding: 5px;
+  border-radius: 50%;
+}
+#dial span:nth-child(1) { top: 10px; left: 85px; }
+#dial span:nth-child(2) { top: 25px; left: 130px; }
+#dial span:nth-child(3) { top: 65px; left: 160px; }
+#dial span:nth-child(4) { top: 120px; left: 150px; }
+#dial span:nth-child(5) { top: 155px; left: 105px; }
+#dial span:nth-child(6) { top: 150px; left: 55px; }
+#dial span:nth-child(7) { top: 110px; left: 20px; }
+#dial span:nth-child(8) { top: 60px; left: 20px; }
+#dial span:nth-child(9) { top: 25px; left: 45px; }
+#dial span:nth-child(10) { top: 90px; left: 85px; }
+footer {
+  background: black;
+  color: lime;
+  padding: 10px;
+  text-align: center;
+  font-size: 10px;
+}
+</style>
+</head>
+<body>
+<main>
+<h1>★ HALVIM TUNNIPLAAN ★</h1>
+<p style="background:black;color:lime;padding:10px;text-align:center">
+Tere tulemast! Õige tunni leidmine on sinu enda probleem.
+</p>
+
+<section>
+<h2>⚠️ HOIATUS</h2>
+<p id="warning">Sinu tunniplaan võib olla vale.</p>
+<button onclick="document.getElementById('warning').textContent='UUS HOIATUS: tunniplaan on aegunud!'">
+Sulge hoiatus
+</button>
+</section>
+
+<section>
+<h2>1. VALI KELLAAEG</h2>
+<p class="small">Otsi õige aeg 1440 valiku seast.</p>
+<select id="time"></select>
+<p id="timeText" class="small">Vali aeg, et teada saada, kas see on õige.</p>
+</section>
+
+<section>
+<h2>2. LEIA ÕIGE LEHEKÜLG</h2>
+<div class="pages">
+<button onclick="changePage(-1)">TAGASI</button>
+<span id="pageLabel">Lehekülg 1 / 12</span>
+<button onclick="changePage(1)">EDASI</button>
+</div>
+<div id="lessons"></div>
+<button onclick="render()">VÄRSKENDA (VÕIB HALVEMAKS MINNA)</button>
+</section>
+
+<section>
+<h2>3. VALI RUUM TELEFONIKETTALT</h2>
+<p class="small">Klõpsa kettal kolm korda. Tulemus võib olla vale.</p>
+<div id="dial">
+  <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span>
+  <span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+</div>
+<p>Valitud numbrid: <b id="digits">—</b></p>
+<p>Sinu ruum: <b id="room">TEADMATA</b></p>
+<button onclick="resetDial()">ALUSTA UUESTI</button>
+</section>
+
+<section>
+<h2>JÄRGMINE TUND</h2>
+<button onclick="nextLesson()">NÄITA JÄRGMIST TUNDI</button>
+<p id="answer">Vajuta nuppu, kui julged.</p>
+</section>
+
+<footer>HALB TUNNIPLAAN™ — mugavus pole meie prioriteet.</footer>
+</main>
+
+<script>
+const lessons = [
+ ["Disainmõtlemine","08:30","204"],
+ ["Matemaatika","10:15","315"],
+ ["Veebiarendus","12:00","109"],
+ ["Lõunapaus","13:45","208"],
+ ["Programmeerimine","15:30","401"],
+ ["Andmebaasid","08:30","117"],
+ ["Inglise keel","10:15","302"],
+ ["Projektitöö","12:00","216"],
+ ["Arvutiõpetus","13:45","110"],
+ ["Testimine","15:30","305"],
+ ["Vaba tund","08:30","214"],
+ ["Üllatusaine","10:15","101"]
+];
+
+// Halb UI 1: 1440 kellaajavalikut.
+const time = document.getElementById("time");
+for (let h = 0; h < 24; h++) {
+  for (let m = 0; m < 60; m++) {
+    let t = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
+    let option = document.createElement("option");
+    option.textContent = t;
+    time.appendChild(option);
+  }
+}
+time.value = "08:30";
+time.onchange = () => {
+  document.getElementById("timeText").textContent =
+    "Valisid " + time.value + ". Kas see on õige? Ei tea.";
+};
+
+// Halb UI 2: juhuslikult töötav lehekülgede süsteem.
+let page = 1;
+function render() {
+  document.getElementById("pageLabel").textContent =
+    "Lehekülg " + page + " / 12";
+  if (Math.random() < 0.3) {
+    document.getElementById("lessons").innerHTML =
+      "VIGA 404: Tunnid läksid kaduma. Proovi uuesti.";
+    return;
+  }
+  let start = ((page - 1) * 2) % lessons.length;
+  document.getElementById("lessons").innerHTML =
+    [lessons[start], lessons[(start + 1) % lessons.length]]
+    .map(l => `<div class="lesson">${l[0]}<br>Kell: ${l[1]}<br>Ruum: ${l[2]}</div>`)
+    .join("");
+}
+function changePage(n) {
+  page = Math.max(1, Math.min(12, page + n));
+  if (Math.random() > 0.45) render();
+  else document.getElementById("pageLabel").textContent =
+    "Lehekülg " + page + " / 12";
+}
+render();
+
+// Halb UI 3: vana telefoni pöördketas.
+let count = 0;
+document.getElementById("dial").onclick = () => {
+  count++;
+  document.getElementById("dial").style.transform =
+    "rotate(" + Math.random() * 360 + "deg)";
+  document.getElementById("digits").textContent = "•".repeat(count);
+  if (count >= 3) {
+    let rooms = ["204","315","109","208","401","117","VALE RUUM"];
+    document.getElementById("room").textContent =
+      rooms[Math.floor(Math.random() * rooms.length)];
+    count = 0;
+  }
+};
+function resetDial() {
+  count = 0;
+  document.getElementById("digits").textContent = "—";
+  document.getElementById("room").textContent = "TEADMATA";
+  document.getElementById("dial").style.transform = "rotate(0deg)";
+}
+function nextLesson() {
+  let answers = [
+    "Järgmine tund on matemaatika. Võib-olla.",
+    "VIGA: järgmine tund on leheküljel 17.",
+    "Avanes hoopis eilne tunniplaan.",
+    "Laadimine... proovi hiljem uuesti.",
+    "Vaata ise. Meie ei tea."
+  ];
+  document.getElementById("answer").textContent =
+    answers[Math.floor(Math.random() * answers.length)];
+}
+</script>
+</body>
+</html>
